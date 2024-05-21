@@ -100,11 +100,12 @@ async fn main() {
     dotenv().ok();
     // gets the user Credentials specified as RSPOTIFY_CLIENT_ID and RSPOTIFY_CLIENT_SECRET
     let creds = Credentials::from_env().unwrap();
+    println!("creds: {:?}", creds);
 
     // define the scopes needed for downloading 
     let oauth = OAuth::from_env(
         scopes!(
-            "playlist-read-private", "playlist-read-collaborative", "playlist-modify-public", "playlist-modify-private", "user-library-read", "user-library-modify", "user-read-private"
+            "playlist-read-private", "playlist-read-collaborative", "user-read-currently-playing", "playlist-modify-public", "playlist-modify-private", "user-library-read", "user-library-modify", "user-read-private"
         )
     )
     .unwrap();
