@@ -1,3 +1,7 @@
+use rspotify::AuthCodeSpotify;
+
+use crate::spotify::from_id;
+
 #[derive(Debug)]
 pub struct Config {
     pub uri: String,
@@ -14,16 +18,19 @@ impl Config {
        config 
     }
 
-    fn parse_uri(&self) {
+    fn parse_uri(&self) -> Vec<&str> {
         let uri_segments: Vec<&str> = self.uri.split("/").collect(); 
-        println!("{:?}", uri_segments);
+        uri_segments
     }
 }
 
-pub fn command_line() {
+pub async fn command_line(spotify_client: &AuthCodeSpotify) {
     let args: Vec<String> = std::env::args().collect();
 
     let config = Config::parse_config(&args);
+    let uri_segments = config.parse_uri();
+
+    from_id(uri_segments[4].to_owned(), spotify_client).await;
 
     println!("{:?}", config);
 }

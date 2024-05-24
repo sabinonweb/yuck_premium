@@ -1,4 +1,4 @@
-use rspotify::{clients::BaseClient, model::{ArtistId, FullArtist, Page, PlayableItem, PlaylistId, PlaylistItem, TrackId}, AuthCodeSpotify};
+use rspotify::{clients::BaseClient, model::{ArtistId, FullArtist, PlaylistId, TrackId}, AuthCodeSpotify};
 use log::error;
 
 #[derive(Debug)]
@@ -61,19 +61,6 @@ pub async fn get_track_details(spotify_id: String, client: &AuthCodeSpotify) -> 
         album_name: track.album.name,
         cover_url: track.album.images.first().map(|image| image.url.clone()),
     })
-}
-
-pub async fn get_tracks_from_items(items: Vec<PlaylistItem>) {
-    let mut tracks: Vec<Track> = Vec::new();
-
-    for track in items {
-       let song = Track {
-            name: track.track.unwrap().name,
-            artists: track.artists.iter().map(|artist| artist.name.clone()).collect(),
-            disc_number: track.disc_number,
-            track_number: track.track_number,
-        };
-    }
 }
 
 pub async fn get_playlists_details(spotify_id: String, client: &AuthCodeSpotify) -> Option<SpotifyPlaylist> {
