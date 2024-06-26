@@ -1,13 +1,13 @@
-use rspotify::{
-    model::{AdditionalType, Country, Market},
-    prelude::*,
-    scopes, AuthCodeSpotify, Credentials, OAuth,
+use rspotify::{ 
+    model::{AdditionalType, Country, Market}, prelude::*, scopes, AuthCodeSpotify, Credentials, OAuth
 };
 use dotenv::dotenv;
-use crate::cli::command_line;
+// use crate::cli::command_line;
+use crate::spotify::get_album_details;
 
-mod cli;
+// mod cli;
 mod spotify;
+mod models;
 
 #[tokio::main]
 async fn main() {
@@ -26,13 +26,13 @@ async fn main() {
         )
     )
     .unwrap();
-    
+   
     let mut spotify_client = AuthCodeSpotify::new(creds, oauth);
     spotify_client.config.token_cached = true;
 
     // obtaining the access token, returns the redirect uri
     // HTTP/1.1 302 FOUND
-    // location: https://client.example.con/cb?code=authorizationcode&state=same_as_sent_in_request
+    // location: https://client.example.com/cb?code=authorizationcode&state=oauth 
     let url = spotify_client.get_authorize_url(false).unwrap();
    
     print!("url: {:?}", url);
@@ -40,11 +40,25 @@ async fn main() {
     //let token = binding.lock().await.unwrap();
 
     println!("\n\n\n\n\naccess token {:?}", spotify_client.token.lock().await.unwrap());
-    // println!("\n\n\n\ntoken: {:?}\n\n\n", token); 
+    // println!("\n\n\n\ntoken: {:?}\n\n\n", token);
+    
+    // this prompt for taken makes request with the given authorization code and if everything goes
+    // well access token is sent bacl
     spotify_client.prompt_for_token(&url).await.unwrap();
     println!("\n\n\n\n\naccess token {:?}", spotify_client.token.lock().await.unwrap());
 
-    command_line(&spotify_client).await;
+    get_album_details(String::from("2Ti79nwTsont5ZHfdxIzAm"), &spotify_client).await;
+    // let playing = spotify_client
+    //     .current_playing(Some(Market::Country(Country::Nepal)), Some(&[AdditionalType::Track]))
+    //     .await
+    //     .unwrap()
+    //     .unwrap()
+    //     .item
+    //     .unwrap()
+    //     .id().unwrap();
+    // println!("Response: {:?} ", playing);
+    //
+    // command_line(&spotify_client).await;
 
 
 
