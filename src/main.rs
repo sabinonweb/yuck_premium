@@ -1,11 +1,17 @@
+use std::{fs::File, path::Path};
+
 use rspotify::{ 
     model::{AdditionalType, Country, Market}, prelude::*, scopes, AuthCodeSpotify, Credentials, OAuth
 };
 use dotenv::dotenv;
+use youtube_dl::{SearchOptions, YoutubeDl};
 // use crate::cli::command_line;
-use crate::spotify::get_album_details;
+use crate::spotify::get_track_details;
+use crate::cli::command_line;
+use crate::downloader::download_song;
 
-// mod cli;
+mod cli;
+mod downloader;
 mod spotify;
 mod models;
 
@@ -46,21 +52,33 @@ async fn main() {
     // well access token is sent bacl
     spotify_client.prompt_for_token(&url).await.unwrap();
     println!("\n\n\n\n\naccess token {:?}", spotify_client.token.lock().await.unwrap());
+    
+    let mut cli_args = command_line().await;
+    let uri_segments = cli_args.parse_uri();
+    let track = get_track_details(uri_segments[4].to_string(), &spotify_client).await.unwrap();
+    println!("\n\nartists' name: {:?}", track.song.artists.join(","));
+    download_song(track, &mut cli_args).await;
 
-    get_album_details(String::from("2Ti79nwTsont5ZHfdxIzAm"), &spotify_client).await;
-    // let playing = spotify_client
-    //     .current_playing(Some(Market::Country(Country::Nepal)), Some(&[AdditionalType::Track]))
-    //     .await
-    //     .unwrap()
-    //     .unwrap()
-    //     .item
-    //     .unwrap()
-    //     .id().unwrap();
-    // println!("Response: {:?} ", playing);
+    // let mut yt_client = YoutubeDl::search_for(&SearchOptions::youtube("The Elements - Indriya"));
+    // println!("yt_Clienet: {:?}", yt_client);
+    // match yt_client.extra_arg("mp3").extract_audio(true).download_to("./") {
+    //     Ok(_) => println!("Successful!"),
+    //     Err(err) => println!("Not found: {:?}", err)
+    // }
     //
-    // command_line(&spotify_client).await;
+     // let playing = spotify_client
+ //     .current_playing(Some(Market::Country(Country::Nepal)), Some(&[AdditionalType::Track]))
+ //     .await
+ //     .unwrap()
+ //     .unwrap()
+ //     .item
+ //     .unwrap()
+ //     .id().unwrap();
+ // println!("Response: {:?} ", playing);
+ //
+ // command_line(&spotify_client).await;
 
 
 
-    //println!("Response: {artists:?}");
+ //println!("Response: {artists:?}");
 }

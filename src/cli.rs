@@ -1,36 +1,48 @@
+use std::path::PathBuf;
+
 use rspotify::AuthCodeSpotify;
 
-use crate::spotify::from_id;
+use crate::{models::cli::{Bitrate, Codec}};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     pub uri: String,
-    pub file_type: String,
+    pub file_path: PathBuf,
+    pub codec: Codec,
+    pub bitrate: Bitrate,
 }
 
 impl Config {
-    fn parse_config(args: &[String]) -> Config {
+    pub fn parse_config(args: &[String]) -> Config {
         let uri = args[1].clone();
-        let file_type = args[2].clone();
-        let config = Config { uri, file_type };
+        let file_path = args[2].clone().into();
+        
+        let codec = args[3].parse().unwrap();
+
+        let bitrate = args[4].parse().unwrap();
+        println!("codec : {:?}, bitrate : {:?}", codec, bitrate);
+
+        let config = Config { uri, file_path, codec, bitrate};
         config.parse_uri();
 
        config 
     }
 
-    fn parse_uri(&self) -> Vec<&str> {
+    pub fn parse_uri(&self) -> Vec<&str> {
         let uri_segments: Vec<&str> = self.uri.split("/").collect(); 
         uri_segments
     }
 }
 
-pub async fn command_line(spotify_client: &AuthCodeSpotify) {
+pub async fn command_line() -> Config {
     let args: Vec<String> = std::env::args().collect();
 
     let config = Config::parse_config(&args);
     let uri_segments = config.parse_uri();
-
-    from_id(uri_segments[4].to_owned(), spotify_client).await;
-
     println!("{:?}", config);
-}
+
+    
+    config
+    // from_id(uri_segments[4].to_owned(), spotify_client).await;
+
+ }

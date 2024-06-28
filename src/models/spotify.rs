@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Track {
     pub name: String,
     pub artists: Vec<String>,
@@ -6,12 +6,14 @@ pub struct Track {
     pub track_number: u32,
 } 
 
+#[derive(Clone, Debug)]
 pub struct SpotifyTrack {
     pub song: Track,
     pub album_name: String,
     pub cover_url: Option<String>,
 }
 
+#[derive(Clone, Debug)]
 pub struct SpotifyAlbum {
     pub name: String,
     pub tracks: Vec<Track>,
@@ -19,6 +21,7 @@ pub struct SpotifyAlbum {
     pub cover_url: Option<String>,
 }
 
+#[derive(Clone, Debug)]
 pub struct SpotifyPlaylist {
     pub name: String,
     pub number_of_songs: u32,

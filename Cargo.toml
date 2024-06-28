@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 futures = "0.3.30"
-reqwest = { version = "0.12.4", features = ["blocking", "json"] }
+reqwest = { version = "0.12.4", features = ["blocking", "json", "stream"] }
 tokio = { version = "1.37.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.117"
@@ -17,3 +17,4 @@ rspotify = {version = "0.13.1", features = ["cli"]}
 dotenv = "0.15.0"
 error = "0.1.9"
 log = "0.4.21"
+youtube_dl = {version="0.10.0", features = ["tokio", "downloader-rustls-tls"]}
