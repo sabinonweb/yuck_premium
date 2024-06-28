@@ -52,6 +52,29 @@ pub async fn get_album_details(spotify_id: String, client: &AuthCodeSpotify) -> 
     }) 
 }
 
+pub fn playable_playlist_songs(playable_items: Vec<PlaylistItem>) -> Vec<Track> {
+    let mut tracks: Vec<Track> = Vec::new();
+
+    for track in playable_items {
+        let song = if let Some(track) = track.track {
+            track
+        } else {
+            continue;
+        };
+
+        let PlayableItem::Track(track) = song else { continue; };
+
+        tracks.push(Track {
+            name: track.name,
+            artists: track.artists.iter().map(|artist| artist.name.clone()).collect(),
+            disc_number: track.disc_number,
+            track_number: track.track_number,
+        });
+    }
+
+    tracks
+}
+
 pub async fn get_playlist_details(spotify_id: String, client: &AuthCodeSpotify) -> Option<SpotifyPlaylist> {
     let playlist_id = match PlaylistId::from_id(spotify_id) {
         Ok(id) => Ok(id),
@@ -59,11 +82,12 @@ pub async fn get_playlist_details(spotify_id: String, client: &AuthCodeSpotify) 
     }.unwrap();
 
     let playlist = client.playlist(playlist_id, None, None).await.map_err(|err| println!("Error while searching playlist of the given id!")).unwrap();
-    
-     
+        
+    let tracks = playable_playlist_songs(playlist.tracks.items);
+
     Some(SpotifyPlaylist { 
         name: playlist.name, 
         number_of_songs: playlist.tracks.total, 
-        cover_url: playlist.images.first().map(|image| image.clone().url)
+        tracks
     })
 }

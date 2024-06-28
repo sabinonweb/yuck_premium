@@ -42,5 +42,15 @@ pub async fn download_song(spotify_song: SpotifyTrack, cli_args: &mut Config) ->
 }
 
 pub async fn download_playlist(spotify_playlist: SpotifyPlaylist, cli_args: &mut Config) -> bool {
-    
+    let parallel_downloads = if cli_args.chunk.is_some() {
+        cli_args.chunk.unwrap()
+    } else {
+        10
+    };
+
+    let no_of_songs = spotify_playlist.number_of_songs;
+
+    if no_of_songs / parallel_downloads
+
+    true
 }

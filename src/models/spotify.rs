@@ -25,5 +25,5 @@ pub struct SpotifyAlbum {
 pub struct SpotifyPlaylist {
     pub name: String,
     pub number_of_songs: u32,
-    pub cover_url: Option<String>,
+    pub tracks: Vec<Track>
 }

@@ -1,8 +1,5 @@
 use std::path::PathBuf;
-
-use rspotify::AuthCodeSpotify;
-
-use crate::{models::cli::{Bitrate, Codec}};
+use crate::models::cli::{Bitrate, Codec};
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -10,6 +7,7 @@ pub struct Config {
     pub file_path: PathBuf,
     pub codec: Codec,
     pub bitrate: Bitrate,
+    pub chunk: Option<u32>,
 }
 
 impl Config {
@@ -20,9 +18,10 @@ impl Config {
         let codec = args[3].parse().unwrap();
 
         let bitrate = args[4].parse().unwrap();
+        let chunk = args[4].parse().unwrap();
         println!("codec : {:?}, bitrate : {:?}", codec, bitrate);
 
-        let config = Config { uri, file_path, codec, bitrate};
+        let config = Config { uri, file_path, codec, bitrate, chunk};
         config.parse_uri();
 
        config 
