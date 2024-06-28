@@ -52,7 +52,7 @@ pub async fn get_album_details(spotify_id: String, client: &AuthCodeSpotify) -> 
     }) 
 }
 
-pub fn playable_playlist_songs(playable_items: Vec<PlaylistItem>) -> Vec<Track> {
+pub fn who_loves_podcasts_anyways(playable_items: Vec<PlaylistItem>) -> Vec<Track> {
     let mut tracks: Vec<Track> = Vec::new();
 
     for track in playable_items {
@@ -83,7 +83,7 @@ pub async fn get_playlist_details(spotify_id: String, client: &AuthCodeSpotify) 
 
     let playlist = client.playlist(playlist_id, None, None).await.map_err(|err| println!("Error while searching playlist of the given id!")).unwrap();
         
-    let tracks = playable_playlist_songs(playlist.tracks.items);
+    let tracks = who_loves_podcasts_anyways(playlist.tracks.items);
 
     Some(SpotifyPlaylist { 
         name: playlist.name, 
