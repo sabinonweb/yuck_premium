@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 use crate::models::cli::{Bitrate, Codec};
 
 #[derive(Debug, Clone)]
@@ -18,7 +18,10 @@ impl Config {
         let codec = args[3].parse().unwrap();
 
         let bitrate = args[4].parse().unwrap();
-        let chunk = args[4].parse().unwrap();
+        let chunk = match u32::from_str(&args[4][..]) {
+            Ok(value) => Some(value),
+            Err(_) => None,
+        };
         println!("codec : {:?}, bitrate : {:?}", codec, bitrate);
 
         let config = Config { uri, file_path, codec, bitrate, chunk};
