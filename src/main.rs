@@ -6,9 +6,9 @@ use rspotify::{
 use dotenv::dotenv;
 use youtube_dl::{SearchOptions, YoutubeDl};
 // use crate::cli::command_line;
-use crate::spotify::get_playlist_details;
+use crate::spotify::get_album_details;
 use crate::cli::command_line;
-use crate::downloader::process_playlist_download;
+use crate::downloader::process_album_download;
 
 mod cli;
 mod downloader;
@@ -55,9 +55,9 @@ async fn main() {
     
     let mut cli_args = command_line().await;
     let uri_segments = cli_args.parse_uri();
-    let playlist = get_playlist_details(uri_segments[4].to_string(), &spotify_client).await.unwrap();
+    let playlist = get_album_details(uri_segments[4].to_string(), &spotify_client).await.unwrap();
     // println!("\n\nartists' name: {:?}", playlist.song.artists.join(","));
-    process_playlist_download(playlist, &mut cli_args).await;
+    process_album_download(playlist, &mut cli_args).await;
 
     // let mut yt_client = YoutubeDl::search_for(&SearchOptions::youtube("The Elements - Indriya"));
     // println!("yt_Clienet: {:?}", yt_client);

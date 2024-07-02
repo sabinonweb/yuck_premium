@@ -32,7 +32,7 @@ pub async fn get_album_details(spotify_id: String, client: &AuthCodeSpotify) -> 
     }.unwrap();
 
     let album = client.album(album_id, None).await.map_err(|err| println!("\n\nError: {:?}", err));
-    println!("album tracks: {:?}", album.clone().unwrap().tracks.items);
+    // println!("album tracks: {:?}", album.clone().unwrap().tracks.items);
     let mut tracks: Vec<Track> = Vec::with_capacity(album.clone().unwrap().tracks.total as usize);
     
     for track in album.clone().unwrap().tracks.items {
@@ -62,7 +62,7 @@ pub fn who_loves_podcasts_anyways(playable_items: Vec<PlaylistItem>) -> Vec<Trac
             continue;
         };
 
-        let PlayableItem::Track(track) = song else { continue; };
+        let PlayableItem::Track(track) = song else { continue; }; 
 
         tracks.push(Track {
             name: track.name,
@@ -81,13 +81,23 @@ pub async fn get_playlist_details(spotify_id: String, client: &AuthCodeSpotify) 
         Err(err) =>  Err(format!("Couldn't parse the given playlist id: {}", err)),
     }.unwrap();
 
-    let playlist = client.playlist(playlist_id, None, None).await.map_err(|err| println!("Error while searching playlist of the given id!")).unwrap();
+    let playlist = client.playlist(playlist_id, None, None)
+        .await
+        .map_err(|err| println!("Error while searching playlist of the given id!"))
+        .unwrap();
         
     let tracks = who_loves_podcasts_anyways(playlist.tracks.items);
+    let mut cover_url: Vec<String> = Vec::new();
 
+    for image in playlist.images {
+        println!("\nURL: {:?}\n", image.url);
+        cover_url.push(image.url);
+    } 
+    
     Some(SpotifyPlaylist { 
         name: playlist.name, 
         number_of_songs: playlist.tracks.total, 
-        tracks
+        tracks,
+        cover_url,
     })
 }
