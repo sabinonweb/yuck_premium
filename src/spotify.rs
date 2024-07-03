@@ -1,6 +1,9 @@
-use futures::TryFutureExt;
-use rspotify::{clients::BaseClient, model::{AlbumId, ArtistId, FullArtist, Page, PlayableItem, PlaylistId, PlaylistItem, TrackId}, AuthCodeSpotify};
-use crate::models::spotify::{SpotifyAlbum, SpotifyPlaylist, SpotifyTrack, Track};
+use rspotify::{
+    clients::BaseClient, model::{
+        image::Image, AlbumId, FullTrack, PlayableItem, PlaylistId, PlaylistItem, SimplifiedTrack, TrackId
+    }, 
+    AuthCodeSpotify};
+use crate::models::spotify::{SpotifyAlbum, SpotifyPlaylist, SpotifyTrack};
 
 pub async fn get_track_details(spotify_id: String, client: &AuthCodeSpotify) -> Option<SpotifyTrack> {
     let id = match TrackId::from_id(spotify_id) {
@@ -10,19 +13,62 @@ pub async fn get_track_details(spotify_id: String, client: &AuthCodeSpotify) -> 
    
     // returns a FullTrack
     let track = client.track(id, None).await.unwrap();
-
-    let song = Track {
+    
+    // filter the images and return the image with dimensions 640 * 640
+    let album_cover = get_album_cover_url(&track);
+    
+    let song = SpotifyTrack {
         name: track.name,
+        album_name: track.album.name,
+        album_cover,
+        //track.album.images
+        //     .iter()
+        //     .filter(|image| ), 
         artists: track.artists.iter().map(|artist| artist.name.clone()).collect(),
         disc_number: track.disc_number,
         track_number: track.track_number,
     };
- 
-    Some(SpotifyTrack {
-        song,
-        album_name: track.album.name,
-        cover_url: track.album.images.first().map(|image| image.url.clone()),
-    })
+    Some(song) 
+}
+
+fn get_album_cover_url(track: &FullTrack) -> String {
+    let album_cover_uri = track
+        .album
+        .images
+        .iter()
+        .filter(|image| image.width.clone() == Some(640) && image.height.clone() == Some(640))
+        .cloned()
+        .collect::<Vec<Image>>();
+
+    let mut album_cover = String::new();
+
+    for image in album_cover_uri {
+        album_cover = image.url.clone();
+        break;
+    }
+    
+    album_cover
+}
+
+fn get_album_cover_url_for_simplified_track(track: &SimplifiedTrack) -> String {
+    let album_cover_uri = track
+        .clone()
+        .album
+        .unwrap()
+        .images
+        .iter()
+        .filter(|image| image.width.clone() == Some(640) && image.height.clone() == Some(640))
+        .cloned()
+        .collect::<Vec<Image>>();
+
+    let mut album_cover = String::new();
+
+    for image in album_cover_uri {
+        album_cover = image.url.clone();
+        break;
+    }
+    
+    album_cover
 }
 
 pub async fn get_album_details(spotify_id: String, client: &AuthCodeSpotify) -> Option<SpotifyAlbum> {
@@ -33,14 +79,17 @@ pub async fn get_album_details(spotify_id: String, client: &AuthCodeSpotify) -> 
 
     let album = client.album(album_id, None).await.map_err(|err| println!("\n\nError: {:?}", err));
     // println!("album tracks: {:?}", album.clone().unwrap().tracks.items);
-    let mut tracks: Vec<Track> = Vec::with_capacity(album.clone().unwrap().tracks.total as usize);
+    let mut tracks: Vec<SpotifyTrack> = Vec::with_capacity(album.clone().unwrap().tracks.total as usize);
     
     for track in album.clone().unwrap().tracks.items {
-        tracks.push(Track { 
+        let album_cover = get_album_cover_url_for_simplified_track(&track);
+        tracks.push(SpotifyTrack { 
             name: track.name, 
             artists: track.artists.iter().map(|artist| artist.name.clone()).collect(),
             disc_number: track.disc_number,
-            track_number: track.track_number
+            track_number: track.track_number,
+            album_cover,
+            album_name: album.clone().unwrap().name
         });
     }
 
@@ -52,8 +101,8 @@ pub async fn get_album_details(spotify_id: String, client: &AuthCodeSpotify) -> 
     }) 
 }
 
-pub fn who_loves_podcasts_anyways(playable_items: Vec<PlaylistItem>) -> Vec<Track> {
-    let mut tracks: Vec<Track> = Vec::new();
+pub fn who_loves_podcasts_anyways(playable_items: Vec<PlaylistItem>) -> Vec<SpotifyTrack> {
+    let mut tracks: Vec<SpotifyTrack> = Vec::new();
 
     for track in playable_items {
         let song = if let Some(track) = track.track {
@@ -62,13 +111,16 @@ pub fn who_loves_podcasts_anyways(playable_items: Vec<PlaylistItem>) -> Vec<Trac
             continue;
         };
 
-        let PlayableItem::Track(track) = song else { continue; }; 
+        let PlayableItem::Track(track) = song else { continue; };
+        let album_cover = get_album_cover_url(&track);
 
-        tracks.push(Track {
+        tracks.push(SpotifyTrack {
             name: track.name,
             artists: track.artists.iter().map(|artist| artist.name.clone()).collect(),
             disc_number: track.disc_number,
             track_number: track.track_number,
+            album_cover,
+            album_name:track.album.name,
         });
     }
 
