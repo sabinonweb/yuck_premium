@@ -1,9 +1,13 @@
 use dotenv::dotenv;
+use log::error;
 use rspotify::{prelude::*, scopes, AuthCodeSpotify, Credentials, OAuth};
 
 use crate::cli::command_line;
-use crate::downloader::process_playlist_download;
-use crate::spotify::get_playlist_details;
+use crate::downloader::{
+    process_album_download, process_playlist_download, process_track_download,
+};
+use crate::models::spotify::Spotify;
+use crate::spotify::{get_album_details, get_playlist_details, get_track_details};
 
 mod cli;
 mod downloader;
@@ -19,7 +23,6 @@ async fn main() {
     let client_secret = std::env::var("RSPOTIFY_CLIENT_SECRET").unwrap();
 
     let creds = Credentials::new(&client_id, &client_secret);
-    println!("creds: {:?}", creds);
 
     // define the scopes needed for downloading
     let oauth = OAuth::from_env(scopes!(
@@ -42,23 +45,54 @@ async fn main() {
     // location: https://client.example.com/cb?code=authorizationcode&state=oauth
     let url = spotify_client.get_authorize_url(false).unwrap();
 
-    print!("url: {:?}", url);
-
-    println!(
-        "\n\n\n\n\naccess token {:?}",
-        spotify_client.token.lock().await.unwrap()
-    );
-
     spotify_client.prompt_for_token(&url).await.unwrap();
-    println!(
-        "\n\n\n\n\naccess token {:?}",
-        spotify_client.token.lock().await.unwrap()
-    );
 
     let mut cli_args = command_line().await;
     let uri_segments = cli_args.parse_uri();
-    let playlist = get_playlist_details(uri_segments[4].to_string(), &spotify_client)
-        .await
-        .unwrap();
-    process_playlist_download(playlist, &mut cli_args).await;
+    let spotify_id = uri_segments[4].to_string();
+    let spotify: Spotify = match uri_segments[3].parse() {
+        Ok(spotify) => spotify,
+        Err(err) => {
+            error!(
+                "Error while parsing Spotify entity {}: {}",
+                uri_segments[3], err
+            );
+            return;
+        }
+    };
+
+    match spotify {
+        Spotify::Album => {
+            let album = match get_album_details(spotify_id.clone(), &spotify_client).await {
+                Some(album) => album,
+                None => {
+                    error!("Details of album {} couldn't be fetched!", spotify_id);
+                    return;
+                }
+            };
+            process_album_download(album, &mut cli_args).await;
+        }
+
+        Spotify::Playlist => {
+            let playlist = match get_playlist_details(spotify_id.clone(), &spotify_client).await {
+                Some(playlist) => playlist,
+                None => {
+                    error!("Details of playlist {} couldn't be fetched!", spotify_id);
+                    return;
+                }
+            };
+            process_playlist_download(playlist, &mut cli_args).await;
+        }
+
+        Spotify::Track => {
+            let track = match get_track_details(spotify_id.clone(), &spotify_client).await {
+                Some(track) => track,
+                None => {
+                    error!("Details of track {} couldn't be fetched!", spotify_id);
+                    return;
+                }
+            };
+            process_track_download(track, &mut cli_args).await;
+        }
+    }
 }

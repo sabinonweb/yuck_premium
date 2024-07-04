@@ -1,6 +1,6 @@
 use crate::{
     cli::Config,
-    metadata::add_metadata,
+    metadata::{add_metadata, check_metadata},
     models::spotify::{SpotifyAlbum, SpotifyPlaylist, SpotifyTrack},
 };
 use log::error;
@@ -23,7 +23,7 @@ fn create_query(spotify_song: SpotifyTrack) -> String {
     )
 }
 
-pub async fn download_song(
+pub async fn download_singular_track(
     spotify_song: SpotifyTrack,
     cli_args: Arc<Config>,
     file_path: PathBuf,
@@ -66,12 +66,12 @@ pub async fn download_song(
     true
 }
 
-pub async fn process_song_download(spotify_song: SpotifyTrack, cli_args: &mut Config) {
+pub async fn process_track_download(spotify_song: SpotifyTrack, cli_args: &mut Config) {
     let file_format = format!("{}.{}", spotify_song.name, cli_args.codec);
     cli_args.file_path.push(file_format);
     let cli_config = Arc::new(cli_args.clone());
     let file_path = cli_args.clone().file_path.clone();
-    if download_song(spotify_song.clone(), cli_config, file_path).await {
+    if download_singular_track(spotify_song.clone(), cli_config, file_path).await {
         cli_args.file_path.pop();
         let file_path = &cli_args.clone().file_path;
         let dir = format!("{}.jpeg", spotify_song.name);
@@ -80,11 +80,18 @@ pub async fn process_song_download(spotify_song: SpotifyTrack, cli_args: &mut Co
 
         // cli_args.file_path.clone().
         download_playlist_songs_art(file_path.to_path_buf(), song.to_owned()).await;
-        add_metadata(
-            spotify_song,
-            cli_args.clone().file_path,
-            file_path.to_path_buf(),
-        );
+
+        let mut image_dir = file_path.clone();
+        let mut song_dir = file_path.clone();
+        let song_name = filter_image_name(&song);
+        let song_file = format!("{}.{}", song.name, cli_args.codec);
+        let image_file = format!("{}.jpeg", song_name);
+        image_dir.push(image_file);
+        song_dir.push(song_file);
+        add_metadata(song.clone(), image_dir.to_path_buf(), song_dir.clone());
+        check_metadata(&song_dir);
+        image_dir.pop();
+        song_dir.pop();
     }
 }
 
@@ -95,12 +102,18 @@ pub async fn download_album_songs(
 ) -> bool {
     for song in songs.into_iter() {
         let track = &song;
-        if download_song(track.to_owned(), cli_args.clone(), file_path.clone()).await {
-            let file_dir = &file_path.clone();
-            let album_art_dir = format!("{}.jpeg", song.name);
-            file_path.clone().push(album_art_dir);
-            add_metadata(song, file_path.clone(), file_dir.to_path_buf());
-            file_path.clone().pop();
+        if download_singular_track(track.to_owned(), cli_args.clone(), file_path.clone()).await {
+            let mut image_dir = file_path.clone();
+            let mut song_dir = file_path.clone();
+            let song_name = filter_image_name(&song);
+            let song_file = format!("{}.{}", song.name, cli_args.codec);
+            let image_file = format!("{}.jpeg", song_name);
+            image_dir.push(image_file);
+            song_dir.push(song_file);
+            add_metadata(song.clone(), image_dir.to_path_buf(), song_dir.clone());
+            check_metadata(&song_dir);
+            image_dir.pop();
+            song_dir.pop();
         }
     }
     true
@@ -209,7 +222,7 @@ pub async fn download_playlist_songs(
             .await
             .unwrap();
 
-        let response = match tokio::spawn(download_song(
+        let response = match tokio::spawn(download_singular_track(
             song.clone(),
             cli_args.clone(),
             file_path.clone(),
@@ -225,11 +238,17 @@ pub async fn download_playlist_songs(
 
         if response {
             tokio::task::block_in_place(|| {
-                let dir = &file_path.clone();
-                let format = format!("{}.jpeg", song.album_name);
-                file_path.clone().push(format);
-                add_metadata(song.clone(), file_path.clone(), dir.to_path_buf());
-                file_path.clone().pop();
+                let mut image_dir = file_path.clone();
+                let mut song_dir = file_path.clone();
+                let song_name = filter_image_name(&song);
+                let song_file = format!("{}.{}", song.name, cli_args.codec);
+                let image_file = format!("{}.jpeg", song_name);
+                image_dir.push(image_file);
+                song_dir.push(song_file);
+                add_metadata(song.clone(), image_dir.to_path_buf(), song_dir.clone());
+                check_metadata(&song_dir);
+                image_dir.pop();
+                song_dir.pop();
             });
         }
     }
@@ -239,7 +258,7 @@ pub async fn download_playlist_songs(
 pub async fn download_playlist_songs_art(album_art_dir: PathBuf, song: SpotifyTrack) {
     let mut dir = album_art_dir.to_owned();
 
-    let image = reqwest::get(song.album_cover).await.unwrap();
+    let image = reqwest::get(song.album_cover.clone()).await.unwrap();
     if let Some(parent) = album_art_dir.parent() {
         if !parent.exists() {
             match create_dir_all(parent) {
@@ -251,11 +270,7 @@ pub async fn download_playlist_songs_art(album_art_dir: PathBuf, song: SpotifyTr
         }
     }
 
-    let song_name = song
-        .name
-        .chars()
-        .filter(|c| !FILTER_LETTERS.contains(c))
-        .collect::<String>();
+    let song_name = filter_image_name(&song);
     let file_format = format!("{}.jpeg", song_name);
     dir.push(file_format);
 
@@ -271,6 +286,13 @@ pub async fn download_playlist_songs_art(album_art_dir: PathBuf, song: SpotifyTr
     println!("\ndirbrefore : {:?}\n", dir.clone());
     dir.pop();
     println!("\ndirafter : {:?}\n", dir);
+}
+
+fn filter_image_name(song: &SpotifyTrack) -> String {
+    song.name
+        .chars()
+        .filter(|c| !FILTER_LETTERS.contains(c))
+        .collect::<String>()
 }
 
 pub async fn process_playlist_download(spotify_playlist: SpotifyPlaylist, cli_args: &mut Config) {

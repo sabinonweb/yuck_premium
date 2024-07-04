@@ -11,6 +11,8 @@ use std::path::PathBuf;
 use crate::models::spotify::SpotifyTrack;
 
 pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_path: PathBuf) {
+    println!("album_dir: {:?}, file_path: {:?}", album_art_dir, file_path);
+    println!("\n\nADD METADATA CALLED\n\n");
     // reads the file type from the path and open the File as File::open
     let probed_file = match Probe::open(&file_path) {
         Err(err) => {
@@ -25,7 +27,10 @@ pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_pat
     };
 
     let mut tagged_file = match probed_file.read() {
-        Ok(file) => file,
+        Ok(file) => {
+            println!("Tagged FIle\n");
+            file
+        }
         Err(err) => {
             error!("Error occured while reading the probe: {}", err);
             return;
@@ -81,7 +86,10 @@ pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_pat
     tag.push_picture(picture);
 
     match tag.save_to_path(file_path.clone(), WriteOptions::default()) {
-        Ok(_) => info!("Tag saved to the path: {:?}", file_path),
+        Ok(_) => {
+            println!("\nFile saved\n");
+            info!("Tag saved to the path: {:?}", file_path);
+        }
         Err(err) => {
             error!(
                 "Error occured while saving tag to the path {:?}: {}",
@@ -90,4 +98,39 @@ pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_pat
             return;
         }
     }
+
+    println!("End of add_Data");
+}
+
+pub fn check_metadata(file_path: &PathBuf) {
+    println!("\n\nCHECK METADATA CALLED\n\n");
+    let probed_file = match Probe::open(file_path) {
+        Ok(probe) => probe,
+        Err(err) => {
+            error!(
+                "Error occured while reading the file_path {:?}: {}",
+                file_path, err
+            );
+            return;
+        }
+    };
+
+    let tagged_file = match probed_file.read() {
+        Ok(file) => file,
+        Err(err) => {
+            error!("Error occured while reading the probe: {}", err);
+            return;
+        }
+    };
+
+    let tag = match tagged_file.primary_tag() {
+        Some(tag) => tag,
+        None => tagged_file.first_tag().expect("No tag found!"),
+    };
+
+    println!("------------Audio Information----------");
+    println!("Title: {}", tag.title().as_deref().unwrap_or("None"));
+    println!("Artist: {}", tag.artist().as_deref().unwrap_or("None"));
+    println!("Album: {}", tag.album().as_deref().unwrap_or("None"));
+    println!("Genre: {}", tag.genre().as_deref().unwrap_or("None"));
 }

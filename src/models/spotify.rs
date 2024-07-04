@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 #[derive(Clone, Debug)]
 pub struct SpotifyTrack {
     pub name: String,
@@ -22,4 +24,23 @@ pub struct SpotifyPlaylist {
     pub number_of_songs: u32,
     pub tracks: Vec<SpotifyTrack>,
     pub cover_url: Vec<String>,
+}
+
+pub enum Spotify {
+    Album,
+    Playlist,
+    Track,
+}
+
+impl FromStr for Spotify {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "album" => Ok(Spotify::Album),
+            "playlist" => Ok(Spotify::Playlist),
+            "track" => Ok(Spotify::Track),
+            _ => Err("Specification: {album, playlist, track}".to_string()),
+        }
+    }
 }
