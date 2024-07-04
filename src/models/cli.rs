@@ -1,7 +1,11 @@
-use std::{fmt::{self, Display}, str::FromStr};
+use std::{
+    fmt::{self, Display},
+    str::FromStr,
+};
 
+// The number of bits proccessed over a certain period of time
 #[derive(Debug, Clone, Copy)]
-pub enum Bitrate {    
+pub enum Bitrate {
     Worst,
     Worse = 32,
     Poor = 96,
@@ -25,7 +29,7 @@ impl FromStr for Bitrate {
             "256" => Ok(Bitrate::Good),
             "320" => Ok(Bitrate::High),
             "best" => Ok(Bitrate::Best),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
@@ -45,6 +49,9 @@ impl Display for Bitrate {
     }
 }
 
+// Codec determines the compression rate and file siz.
+// Lossy Codec formats compress the file and reduce size
+// But formats that don't compress have high audio quality
 #[derive(Debug, Clone, Copy)]
 pub enum Codec {
     MP3,
@@ -62,10 +69,10 @@ impl FromStr for Codec {
             "flac" => Ok(Codec::Flac),
             "mpa" => Ok(Codec::MPA),
             "opus" => Ok(Codec::Opus),
-            _ => Err(())
+            _ => Err(()),
         }
     }
-} 
+}
 
 impl fmt::Display for Codec {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

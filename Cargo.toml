@@ -18,3 +18,4 @@ dotenv = "0.15.0"
 error = "0.1.9"
 log = "0.4.21"
 youtube_dl = {version="0.10.0", features = ["tokio", "downloader-rustls-tls"]}
+lofty = "0.20.1"
