@@ -1,5 +1,6 @@
 use crate::{
     cli::Config,
+    metadata::add_metadata,
     models::spotify::{SpotifyAlbum, SpotifyPlaylist, SpotifyTrack},
 };
 use log::error;
@@ -68,9 +69,23 @@ pub async fn download_song(
 pub async fn process_song_download(spotify_song: SpotifyTrack, cli_args: &mut Config) {
     let file_format = format!("{}.{}", spotify_song.name, cli_args.codec);
     cli_args.file_path.push(file_format);
-    let cli_args = Arc::new(cli_args.clone());
-    let file_path = cli_args.file_path.clone();
-    download_song(spotify_song, cli_args, file_path).await;
+    let cli_config = Arc::new(cli_args.clone());
+    let file_path = cli_args.clone().file_path.clone();
+    if download_song(spotify_song.clone(), cli_config, file_path).await {
+        cli_args.file_path.pop();
+        let file_path = &cli_args.clone().file_path;
+        let dir = format!("{}.jpeg", spotify_song.name);
+        cli_args.clone().file_path.push(dir);
+        let song = &spotify_song;
+
+        // cli_args.file_path.clone().
+        download_playlist_songs_art(file_path.to_path_buf(), song.to_owned()).await;
+        add_metadata(
+            spotify_song,
+            cli_args.clone().file_path,
+            file_path.to_path_buf(),
+        );
+    }
 }
 
 pub async fn download_album_songs(
@@ -78,14 +93,14 @@ pub async fn download_album_songs(
     cli_args: Arc<Config>,
     file_path: PathBuf,
 ) -> bool {
-    println!("songss: {:?}\n", songs);
     for song in songs.into_iter() {
-        // println!("song: {:?}\n", song);
-
-        // let file_format = format!("{}.{}", song.name, cli_args.codec);
-        // file_path.push(file_format.clone());
-        if download_song(song, cli_args.clone(), file_path.clone()).await {
-            // println!("Downloading: {:?}", file_format.clone());
+        let track = &song;
+        if download_song(track.to_owned(), cli_args.clone(), file_path.clone()).await {
+            let file_dir = &file_path.clone();
+            let album_art_dir = format!("{}.jpeg", song.name);
+            file_path.clone().push(album_art_dir);
+            add_metadata(song, file_path.clone(), file_dir.to_path_buf());
+            file_path.clone().pop();
         }
     }
     true
@@ -194,9 +209,29 @@ pub async fn download_playlist_songs(
             .await
             .unwrap();
 
-        tokio::spawn(download_song(song, cli_args.clone(), file_path.clone()))
-            .await
-            .unwrap();
+        let response = match tokio::spawn(download_song(
+            song.clone(),
+            cli_args.clone(),
+            file_path.clone(),
+        ))
+        .await
+        {
+            Ok(b) => b,
+            Err(err) => {
+                error!("Error occured while downloading a song: {}", err);
+                return false;
+            }
+        };
+
+        if response {
+            tokio::task::block_in_place(|| {
+                let dir = &file_path.clone();
+                let format = format!("{}.jpeg", song.album_name);
+                file_path.clone().push(format);
+                add_metadata(song.clone(), file_path.clone(), dir.to_path_buf());
+                file_path.clone().pop();
+            });
+        }
     }
     true
 }
