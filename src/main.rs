@@ -1,3 +1,4 @@
+use cli::parser;
 use dotenv::dotenv;
 use log::error;
 use rspotify::{prelude::*, scopes, AuthCodeSpotify, Credentials, OAuth};
@@ -46,20 +47,12 @@ async fn main() {
     let url = spotify_client.get_authorize_url(false).unwrap();
 
     spotify_client.prompt_for_token(&url).await.unwrap();
+    parser();
 
     let mut cli_args = command_line().await;
-    let uri_segments = cli_args.parse_uri();
-    let spotify_id = uri_segments[4].to_string();
-    let spotify: Spotify = match uri_segments[3].parse() {
-        Ok(spotify) => spotify,
-        Err(err) => {
-            error!(
-                "Error while parsing Spotify entity {}: {}",
-                uri_segments[3], err
-            );
-            return;
-        }
-    };
+    println!("cli: {:?}", cli_args);
+    let spotify_id = &cli_args.id.to_owned();
+    let spotify: Spotify = cli_args.spotify_type.clone();
 
     match spotify {
         Spotify::Album => {

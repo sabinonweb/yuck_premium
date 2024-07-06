@@ -128,9 +128,25 @@ pub fn check_metadata(file_path: &PathBuf) {
         None => tagged_file.first_tag().expect("No tag found!"),
     };
 
-    println!("------------Audio Information----------");
-    println!("Title: {}", tag.title().as_deref().unwrap_or("None"));
-    println!("Artist: {}", tag.artist().as_deref().unwrap_or("None"));
-    println!("Album: {}", tag.album().as_deref().unwrap_or("None"));
-    println!("Genre: {}", tag.genre().as_deref().unwrap_or("None"));
+    println!("                      ------------Audio Information----------");
+    println!(
+        "                      Title: {}",
+        tag.title().as_deref().unwrap_or("None")
+    );
+    println!(
+        "                      Artist: {}",
+        tag.artist().as_deref().unwrap_or("None")
+    );
+    println!(
+        "                      Album: {}",
+        tag.album().as_deref().unwrap_or("None")
+    );
+    println!(
+        "                      Disk: {}",
+        tag.disk().expect("Disk number not found!")
+    );
+    println!(
+        "                      Track: {}",
+        tag.track().expect("Track number not found!")
+    );
 }

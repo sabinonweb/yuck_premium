@@ -23,9 +23,11 @@ pub struct SpotifyPlaylist {
     pub name: String,
     pub number_of_songs: u32,
     pub tracks: Vec<SpotifyTrack>,
+    #[allow(dead_code)]
     pub cover_url: Vec<String>,
 }
 
+#[derive(Clone, Debug)]
 pub enum Spotify {
     Album,
     Playlist,

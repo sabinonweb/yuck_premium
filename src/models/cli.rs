@@ -3,8 +3,10 @@ use std::{
     str::FromStr,
 };
 
+use clap::Subcommand;
+
 // The number of bits proccessed over a certain period of time
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Subcommand)]
 pub enum Bitrate {
     Worst,
     Worse = 32,

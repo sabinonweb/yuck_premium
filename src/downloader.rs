@@ -88,6 +88,7 @@ pub async fn process_track_download(spotify_song: SpotifyTrack, cli_args: &mut C
         let image_file = format!("{}.jpeg", song_name);
         image_dir.push(image_file);
         song_dir.push(song_file);
+        println!("image_dir: {:?}, song_dir: {:?}\n", image_dir, song_dir);
         add_metadata(song.clone(), image_dir.to_path_buf(), song_dir.clone());
         check_metadata(&song_dir);
         image_dir.pop();

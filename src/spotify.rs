@@ -175,7 +175,7 @@ pub async fn get_playlist_details(
     let playlist = client
         .playlist(playlist_id, None, None)
         .await
-        .map_err(|err| println!("Error while searching playlist of the given id!"))
+        .map_err(|err| println!("Error while searching playlist of the given id: {}", err))
         .unwrap();
 
     let tracks = who_loves_podcasts_anyways(playlist.tracks.items);

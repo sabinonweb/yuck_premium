@@ -1,5 +1,5 @@
 [package]
-name = "downloader"
+name = "yuck_premium"
 version = "0.1.0"
 edition = "2021"
 
@@ -19,3 +19,5 @@ error = "0.1.9"
 log = "0.4.21"
 youtube_dl = {version="0.10.0", features = ["tokio", "downloader-rustls-tls"]}
 lofty = "0.20.1"
+clap = { version = "4.5.8", features = ["cargo", "derive"] }
+colored = "2.1.0"

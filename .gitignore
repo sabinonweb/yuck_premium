@@ -1,2 +1,5 @@
 /target
 .spotify_token_cache.json
+.env
+.DS_Store
+tags
