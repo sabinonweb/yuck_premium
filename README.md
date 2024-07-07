@@ -71,11 +71,11 @@ Download a full album by providing its Spotify ID, output path, codec (e.g., fla
 
 # Screenshots
 
-![](assets/image101.png)
+<img width="1612" alt="Screenshot 2024-07-07 at 21 41 37" src="https://github.com/sabinonweb/yuck_premium/assets/123313687/750deb98-a839-4763-bb0f-7dbc1d3d7ebd">
+ 
+<img width="845" alt="Screenshot 2024-07-07 at 21 42 07" src="https://github.com/sabinonweb/yuck_premium/assets/123313687/50adbefb-0a96-4173-951d-947fd7ef98ba">
 
-![](assets/image202.png)
-
-![](assets/image303.png)
+<img width="845" alt="Screenshot 2024-07-07 at 21 44 20" src="https://github.com/sabinonweb/yuck_premium/assets/123313687/57502984-420c-45f2-a443-3e3ce333eb1e">
 
 # Acknowledgements
 
