@@ -109,12 +109,6 @@ pub fn parser() -> Command {
             Arg::new("file_path")
                 .long("path")
                 .value_name("file_path")
-                .value_parser([
-                    PossibleValue::new("mp3"),
-                    PossibleValue::new("mpa"),
-                    PossibleValue::new("flac"),
-                    PossibleValue::new("opus"),
-                ])
                 .help("Path where the audio file is to be downloaded!")
                 .required(true),
         )
@@ -123,6 +117,12 @@ pub fn parser() -> Command {
                 .long("codec")
                 // .value_names(["mp3", "mpa", "flac", "opus"])
                 .default_value("mp3")
+                .value_parser([
+                    PossibleValue::new("mp3"),
+                    PossibleValue::new("mpa"),
+                    PossibleValue::new("flac"),
+                    PossibleValue::new("opus"),
+                ])
                 .help("Name or ID of the spotify to download")
                 .required(true),
         )

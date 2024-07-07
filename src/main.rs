@@ -1,5 +1,6 @@
 use cli::parser;
 use dotenv::dotenv;
+// use downloader::progress_bar;
 use log::error;
 use rspotify::{prelude::*, scopes, AuthCodeSpotify, Credentials, OAuth};
 
@@ -50,9 +51,19 @@ async fn main() {
     parser();
 
     let mut cli_args = command_line().await;
-    println!("cli: {:?}", cli_args);
     let spotify_id = &cli_args.id.to_owned();
     let spotify: Spotify = cli_args.spotify_type.clone();
+
+    println!(
+        r"__   __          _    ____                     _
+ \ \ / /   _  ___| | _|  _ \ _ __ ___ _ __ ___ (_)_   _ _ __ ___
+  \ V / | | |/ __| |/ / |_) | '__/ _ \ '_ ` _ \| | | | | '_ ` _ \
+   | || |_| | (__|   <|  __/| | |  __/ | | | | | | |_| | | | | | |
+   |_| \__,_|\___|_|\_\_|   |_|  \___|_| |_| |_|_|\__,_|_| |_| |_|
+                                                                 "
+    );
+
+    // progress_bar(10);
 
     match spotify {
         Spotify::Album => {

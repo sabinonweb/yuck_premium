@@ -1,3 +1,4 @@
+use colored::Colorize;
 use lofty::config::WriteOptions;
 use lofty::picture::{Picture, PictureType};
 use lofty::prelude::*;
@@ -11,8 +12,6 @@ use std::path::PathBuf;
 use crate::models::spotify::SpotifyTrack;
 
 pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_path: PathBuf) {
-    println!("album_dir: {:?}, file_path: {:?}", album_art_dir, file_path);
-    println!("\n\nADD METADATA CALLED\n\n");
     // reads the file type from the path and open the File as File::open
     let probed_file = match Probe::open(&file_path) {
         Err(err) => {
@@ -27,10 +26,7 @@ pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_pat
     };
 
     let mut tagged_file = match probed_file.read() {
-        Ok(file) => {
-            println!("Tagged FIle\n");
-            file
-        }
+        Ok(file) => file,
         Err(err) => {
             error!("Error occured while reading the probe: {}", err);
             return;
@@ -48,8 +44,12 @@ pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_pat
                 let tag_type = tagged_file.primary_tag_type();
 
                 println!(
-                    "WARN: No tags found, creating a new tag of type: {:?}",
-                    tag_type
+                    "{}",
+                    format!(
+                        "WARN: No tags found, creating a new tag of type: {:?}",
+                        tag_type
+                    )
+                    .yellow()
                 );
                 tagged_file.insert_tag(Tag::new(tag_type));
 
@@ -87,8 +87,10 @@ pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_pat
 
     match tag.save_to_path(file_path.clone(), WriteOptions::default()) {
         Ok(_) => {
-            println!("\nFile saved\n");
-            info!("Tag saved to the path: {:?}", file_path);
+            info!(
+                "{}",
+                format!("Tag saved to the path: {:?}", file_path).green()
+            );
         }
         Err(err) => {
             error!(
@@ -98,18 +100,19 @@ pub fn add_metadata(spotify_song: SpotifyTrack, album_art_dir: PathBuf, file_pat
             return;
         }
     }
-
-    println!("End of add_Data");
 }
 
 pub fn check_metadata(file_path: &PathBuf) {
-    println!("\n\nCHECK METADATA CALLED\n\n");
     let probed_file = match Probe::open(file_path) {
         Ok(probe) => probe,
         Err(err) => {
             error!(
-                "Error occured while reading the file_path {:?}: {}",
-                file_path, err
+                "{}",
+                format!(
+                    "Error occured while reading the file_path {:?}: {}",
+                    file_path, err
+                )
+                .red()
             );
             return;
         }
@@ -118,7 +121,10 @@ pub fn check_metadata(file_path: &PathBuf) {
     let tagged_file = match probed_file.read() {
         Ok(file) => file,
         Err(err) => {
-            error!("Error occured while reading the probe: {}", err);
+            error!(
+                "{}",
+                format!("Error occured while reading the probe: {}", err).red()
+            );
             return;
         }
     };
@@ -128,25 +134,28 @@ pub fn check_metadata(file_path: &PathBuf) {
         None => tagged_file.first_tag().expect("No tag found!"),
     };
 
-    println!("                      ------------Audio Information----------");
     println!(
-        "                      Title: {}",
-        tag.title().as_deref().unwrap_or("None")
+        "{}",
+        "------------Audio Information----------".bright_yellow()
     );
     println!(
-        "                      Artist: {}",
-        tag.artist().as_deref().unwrap_or("None")
+        "{}",
+        format!("Title: {}", tag.title().as_deref().unwrap_or("None")).bright_blue()
     );
     println!(
-        "                      Album: {}",
-        tag.album().as_deref().unwrap_or("None")
+        "{}",
+        format!("Artist: {}", tag.artist().as_deref().unwrap_or("None")).bright_blue()
     );
     println!(
-        "                      Disk: {}",
-        tag.disk().expect("Disk number not found!")
+        "{}",
+        format!("Album: {}", tag.album().as_deref().unwrap_or("None")).bright_blue()
     );
     println!(
-        "                      Track: {}",
-        tag.track().expect("Track number not found!")
+        "{}",
+        format!("Disk Number: {}", tag.disk().unwrap_or(0)).bright_blue()
+    );
+    println!(
+        "{}\n",
+        format!("Track Number: {}", tag.track().unwrap_or(0)).bright_blue()
     );
 }
