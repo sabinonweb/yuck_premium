@@ -2,7 +2,7 @@
 
 yuck_premium is a command-line application designed to download music tracks, playlists, and albums from spotify. Users can specify the content they wish to download using unique identifiers, along with desired bitrate, codec, and destination path for saving the files. This tool aims to provide a seamless and efficient way to archive and enjoy music offline.
 
-# Setting Up yuck_premium
+# Setup
 
 To use yuck_premium, you need two things: FFmpeg and a Spotify developer account.
 
