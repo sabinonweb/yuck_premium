@@ -8,7 +8,7 @@ To use yuck_premium, you need two things: FFmpeg and a Spotify developer account
 
 ### Steps to Create a Spotify Developer Account:
 
-1. **Access Spotify Developer Dashboard**: Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/).
+1. **Access Spotify Developer Dashboard**: Go to the [Spotify Developer Dashboard].
 2. **Login and Create an App**: Log in with your Spotify credentials and click on "Create an App".
 3. **App Details**: Enter a name and description for your app, check the required checkbox, and proceed.
 4. **Retrieve Client Credentials**: You will now have access to your Client ID. Click on "Show Client Secret" to get your Client Secret.
