@@ -41,6 +41,7 @@ async fn main() {
 
     let mut spotify_client = AuthCodeSpotify::new(creds, oauth);
     spotify_client.config.token_cached = true;
+    spotify_client.config.token_refreshing = true;
 
     // obtaining the access token, returns the redirect uri
     // HTTP/1.1 302 FOUND
