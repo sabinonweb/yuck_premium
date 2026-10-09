@@ -155,7 +155,15 @@ pub fn check_metadata(file_path: &PathBuf) {
         format!("Disk Number: {}", tag.disk().unwrap_or(0)).bright_blue()
     );
     println!(
-        "{}\n",
+        "{}",
         format!("Track Number: {}", tag.track().unwrap_or(0)).bright_blue()
+    );
+    let first_lyric_line = tag
+        .get_string(&ItemKey::Lyrics)
+        .and_then(|l| l.lines().find(|line| !line.trim().is_empty()))
+        .unwrap_or("None");
+    println!(
+        "{}\n",
+        format!("Lyrics: {}", first_lyric_line).bright_blue()
     );
 }

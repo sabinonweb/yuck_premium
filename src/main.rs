@@ -13,6 +13,7 @@ use crate::spotify::{get_album_details, get_playlist_details, get_track_details}
 
 mod cli;
 mod downloader;
+mod lyrics;
 mod metadata;
 mod models;
 mod spotify;

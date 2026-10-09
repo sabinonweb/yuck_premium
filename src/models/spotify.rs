@@ -8,6 +8,7 @@ pub struct SpotifyTrack {
     pub album_cover: String,
     pub disc_number: i32,
     pub track_number: u32,
+    pub duration_ms: i64,
 }
 
 #[derive(Clone, Debug)]

@@ -1,4 +1,5 @@
 use crate::models::spotify::{SpotifyAlbum, SpotifyPlaylist, SpotifyTrack};
+use futures::StreamExt;
 use log::error;
 use rspotify::{
     clients::BaseClient,
@@ -8,6 +9,26 @@ use rspotify::{
     },
     AuthCodeSpotify,
 };
+
+async fn fetch_all_playlist_items(
+    playlist_id: PlaylistId<'_>,
+    client: &AuthCodeSpotify,
+) -> Vec<PlaylistItem> {
+    let mut all_songs = Vec::new();
+    let mut playlist = client.playlist_items(playlist_id, None, None);
+
+    while let Some(x) = playlist.next().await {
+        match x {
+            Ok(item) => all_songs.push(item),
+            Err(e) => {
+                eprintln!("Error while fetching the song: {:?}", e);
+                break;
+            }
+        }
+    }
+
+    all_songs
+}
 
 pub async fn get_track_details(
     spotify_id: String,
@@ -36,6 +57,7 @@ pub async fn get_track_details(
             .collect(),
         disc_number: track.disc_number,
         track_number: track.track_number,
+        duration_ms: track.duration.num_milliseconds(),
     };
     Some(song)
 }
@@ -112,6 +134,7 @@ pub async fn get_album_details(
                 .collect(),
             disc_number: track.disc_number,
             track_number: track.track_number,
+            duration_ms: track.duration.num_milliseconds(),
             album_cover,
             album_name: album.clone().unwrap().name,
         });
@@ -154,6 +177,7 @@ pub fn who_loves_podcasts_anyways(playable_items: Vec<PlaylistItem>) -> Vec<Spot
                 .collect(),
             disc_number: track.disc_number,
             track_number: track.track_number,
+            duration_ms: track.duration.num_milliseconds(),
             album_cover,
             album_name: track.album.name,
         });
@@ -173,12 +197,13 @@ pub async fn get_playlist_details(
     .unwrap();
 
     let playlist = client
-        .playlist(playlist_id, None, None)
+        .playlist(playlist_id.clone(), None, None)
         .await
         .map_err(|err| println!("Error while searching playlist of the given id: {}", err))
         .unwrap();
+    let songs = fetch_all_playlist_items(playlist_id, client).await;
 
-    let tracks = who_loves_podcasts_anyways(playlist.tracks.items);
+    let tracks = who_loves_podcasts_anyways(songs);
     let mut cover_url: Vec<String> = Vec::new();
 
     for image in playlist.images {
@@ -188,7 +213,7 @@ pub async fn get_playlist_details(
 
     Some(SpotifyPlaylist {
         name: playlist.name,
-        number_of_songs: playlist.tracks.total,
+        number_of_songs: tracks.len() as u32,
         tracks,
         cover_url,
     })

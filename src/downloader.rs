@@ -1,5 +1,6 @@
 use crate::{
     cli::Config,
+    lyrics::save_lyrics,
     metadata::{add_metadata, check_metadata},
     models::spotify::{SpotifyAlbum, SpotifyPlaylist, SpotifyTrack},
 };
@@ -69,7 +70,7 @@ pub async fn download_singular_track(
         .cyan()
     );
 
-    if let Ok(_) = yt_client
+    match yt_client
         .extract_audio(true)
         .output_template(file_format.clone())
         .extra_arg("--audio-format")
@@ -79,33 +80,48 @@ pub async fn download_singular_track(
         .download_to_async(file_path)
         .await
     {
-        while downloaded < cli_args.chunk.unwrap().into() {
-            downloaded = min(downloaded + 1, cli_args.chunk.unwrap().into());
-            pb.set_position(downloaded);
+        Ok(_) => {
+            while downloaded < cli_args.chunk.unwrap().into() {
+                downloaded = min(downloaded + 1, cli_args.chunk.unwrap().into());
+                pb.set_position(downloaded);
+            }
+
+            pb.finish_with_message("downloaded!");
+
+            println!(
+                "{}",
+                format!(
+                    "\n{} - {} downloaded!\n",
+                    spotify_song.name,
+                    spotify_song.artists.join(",")
+                )
+                .green()
+            );
+
+            true
+        }
+        Err(e) => {
+            pb.abandon_with_message("failed!");
+            eprintln!(
+                "{}",
+                format!(
+                    "\nError while downloading {} - {}: {}\n",
+                    spotify_song.name,
+                    spotify_song.artists.join(","),
+                    e
+                )
+                .red()
+            );
+
+            false
         }
     }
-    pb.finish_with_message("downloaded!");
-
-    println!(
-        "{}",
-        format!(
-            "\n{} - {} downloaded!\n",
-            spotify_song.name,
-            spotify_song.artists.join(",")
-        )
-        .green()
-    );
-
-    true
 }
 
 pub async fn process_track_download(spotify_song: SpotifyTrack, cli_args: &mut Config) {
-    let file_format = format!("{}.{}", spotify_song.name, cli_args.codec);
-    cli_args.file_path.push(file_format);
     let cli_config = Arc::new(cli_args.clone());
     let file_path = cli_args.clone().file_path.clone();
     if download_singular_track(spotify_song.clone(), cli_config, file_path).await {
-        cli_args.file_path.pop();
         let file_path = &cli_args.clone().file_path;
         let dir = format!("{}.jpeg", spotify_song.name);
         cli_args.clone().file_path.push(dir);
@@ -122,6 +138,7 @@ pub async fn process_track_download(spotify_song: SpotifyTrack, cli_args: &mut C
         song_dir.push(song_file);
 
         add_metadata(song.clone(), image_dir.to_path_buf(), song_dir.clone());
+        save_lyrics(song, &song_dir).await;
 
         check_metadata(&song_dir);
         image_dir.pop();
@@ -145,6 +162,7 @@ pub async fn download_album_songs(
             image_dir.push(image_file);
             song_dir.push(song_file);
             add_metadata(song.clone(), image_dir.to_path_buf(), song_dir.clone());
+            save_lyrics(&song, &song_dir).await;
             check_metadata(&song_dir);
             image_dir.pop();
             song_dir.pop();
@@ -279,7 +297,7 @@ pub async fn download_playlist_songs(
         };
 
         if response {
-            tokio::task::block_in_place(|| {
+            let song_dir = tokio::task::block_in_place(|| {
                 let mut image_dir = file_path.clone();
                 let mut song_dir = file_path.clone();
                 let song_name = filter_image_name(&song);
@@ -288,10 +306,10 @@ pub async fn download_playlist_songs(
                 image_dir.push(image_file);
                 song_dir.push(song_file);
                 add_metadata(song.clone(), image_dir.to_path_buf(), song_dir.clone());
-                check_metadata(&song_dir);
-                image_dir.pop();
-                song_dir.pop();
+                song_dir
             });
+            save_lyrics(song, &song_dir).await;
+            tokio::task::block_in_place(|| check_metadata(&song_dir));
         }
     }
 

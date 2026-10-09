@@ -109,7 +109,8 @@ pub fn parser() -> Command {
             Arg::new("file_path")
                 .long("path")
                 .value_name("file_path")
-                .help("Path where the audio file is to be downloaded!")
+                .help("Path where the audio file is to be downloaded! Defaults to $YUCK_DOWNLOAD_DIR")
+                .env("YUCK_DOWNLOAD_DIR")
                 .required(true),
         )
         .arg(
